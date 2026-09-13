@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from content_brain.domain.models import VideoFormat
+from content_brain.domain.models import StructuredScript, VideoFormat
 from content_brain.domain.validation import validate_package
 from content_brain.pipeline import ContentPipeline, calculate_quality
 from content_brain.providers.mock import MockProvider
@@ -31,7 +31,7 @@ def test_full_long_pipeline() -> None:
 
 def test_duration_validation_and_quality_penalty() -> None:
     package = ContentPipeline(MockProvider()).generate(TOPIC, VideoFormat.SHORT)
-    bad = package.model_copy(update={"final_script": "too short"})
+    bad = package.model_copy(update={"script": StructuredScript(sections=[section.model_copy(update={"text": "too short"}) for section in package.script.sections])})
     validation = validate_package(bad)
     scored = bad.model_copy(update={"validation": validation})
     assert not validation.valid

@@ -23,8 +23,11 @@ def score_hook(candidate: HookCandidate, topic: str, audience_pain: str, format_
     alignment = 15.0 if topic_words.intersection(text.split()) or pain_words.intersection(text.split()) else 7.0
     suitability = 15.0 if (format_ is VideoFormat.SHORT and len(candidate.text.split()) <= 18) or format_ is VideoFormat.LONG_FORM else 8.0
     novelty = 10.0 if _contains_any(text, ("isn't", "not laziness", "instead")) else 5.0
-    breakdown = {"curiosity": curiosity, "emotional_relevance": emotional, "specificity": specificity, "clarity": clarity, "audience_pain_alignment": alignment, "format_suitability": suitability, "novelty": novelty}
-    return candidate.model_copy(update={"score": _bounded(sum(breakdown.values())), "score_breakdown": breakdown})
+    impact = 15.0 if len(candidate.text.split()) <= 14 and ("?" in candidate.text or emotional >= 15) else 7.0
+    risk = -25.0 if _contains_any(text, ("you won't believe", "guaranteed", "100%")) else 0.0
+    flags = ["clickbait_phrase"] if risk else []
+    breakdown = {"curiosity": curiosity, "clarity": clarity, "emotional_tension": emotional, "specificity": specificity, "novelty": novelty, "first_3_second_impact": impact, "clickbait_risk": risk, "audience_pain_alignment": alignment, "format_suitability": suitability}
+    return candidate.model_copy(update={"score": _bounded(sum(breakdown.values())), "score_breakdown": breakdown, "risk_flags": flags})
 
 
 def score_title(candidate: TitleCandidate, topic: str) -> TitleCandidate:
@@ -36,6 +39,7 @@ def score_title(candidate: TitleCandidate, topic: str) -> TitleCandidate:
     emotional = 14.0 if _contains_any(text, ("guilt", "stuck", "avoid", "fear", "lazy")) else 8.0
     alignment = 15.0 if topic_words.intersection(text.split()) else 7.0
     click_potential = 16.0 if _contains_any(text, ("why", "real reason", "not", "even")) else 9.0
-    risk = 0.0 if not _contains_any(text, ("shocking", "guaranteed", "always", "never", "secret cure")) else -12.0
+    risk = 0.0 if not _contains_any(text, ("shocking", "guaranteed", "always", "never", "secret cure", "100%")) else -12.0
+    flags = ["clickbait_or_absolute_language"] if risk else []
     breakdown = {"curiosity": curiosity, "clarity": clarity, "specificity": specificity, "emotional_relevance": emotional, "topic_alignment": alignment, "click_potential": click_potential, "clickbait_risk": risk}
-    return candidate.model_copy(update={"score": _bounded(sum(breakdown.values())), "score_breakdown": breakdown})
+    return candidate.model_copy(update={"score": _bounded(sum(breakdown.values())), "score_breakdown": breakdown, "risk_flags": flags})

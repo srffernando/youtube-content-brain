@@ -31,11 +31,11 @@ The CLI accepts `short` and `long`; internally `long` maps to `long_form`.
 
 ## Design
 
-`LLMProvider` is the only provider boundary. `MockProvider` creates deterministic structured output; `OpenAIProvider` reserves an adapter contract but is intentionally not wired to an SDK in this phase. The pipeline itself performs candidate scoring, selected-candidate ranking, claim validation, quality scoring, and persistence.
+`LLMProvider` is the only provider boundary. `MockProvider` creates deterministic structured output; `OpenAIProvider` reserves an adapter contract but is intentionally not wired to an SDK in this phase. The Phase 2 `ContentOrchestrator` coordinates isolated topic, concept, hook, script, claim, validation, and scoring stages. It does not embed generation logic.
 
 Each psychology insight includes a claim, reasoning, confidence, optional source metadata, and recommended wording. Unsupported authority phrases without a source produce validation warnings. This project performs no web research.
 
-SQLite retains the complete JSON package and searchable metadata. The package includes empty analytics fields for views, impressions, CTR, average view duration, average percentage viewed, likes, comments, shares, and subscribers gained.
+Scripts are structured into timed sections rather than emitted as an opaque blob. SQLite retains the complete JSON package and searchable metadata, plus version, hook, title, claim, quality-score, and generation-run records. The package includes empty analytics fields for views, impressions, CTR, average view duration, average percentage viewed, likes, comments, shares, and subscribers gained.
 
 ## Development
 

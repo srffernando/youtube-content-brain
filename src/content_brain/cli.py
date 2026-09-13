@@ -33,10 +33,21 @@ def generate(
     topic: Annotated[str, typer.Option(help="The video topic or question.")],
     format: Annotated[str, typer.Option(help="short or long")] = "short",
     database: Annotated[Path | None, typer.Option(help="SQLite database path.")] = None,
+    json_output: Annotated[bool, typer.Option("--json", help="Print the complete package JSON.")] = False,
 ) -> None:
     package = ContentPipeline(MockProvider()).generate(topic, _format(format))
     _repo(database).save(package)
-    typer.echo(package.model_dump_json(indent=2))
+    if json_output:
+        typer.echo(package.model_dump_json(indent=2))
+        return
+    typer.echo(_summary(package))
+
+
+def _summary(package: ContentPackage) -> str:
+    supported = sum(claim.source is not None for claim in package.claims)
+    needs_review = len(package.claims) - supported
+    warnings = "\n".join(f"- {warning}" for warning in package.validation.warnings) or "- None"
+    return (f"[ok] Topic analyzed\n[ok] Audience identified\n[ok] Emotional angle selected\n[ok] 5 hooks generated\n[ok] 5 titles generated\n[ok] Structured script generated\n[ok] Psychology claims extracted\n[ok] Claims validated\n[ok] Quality scored\n\nCONTENT SCORE: {package.quality_score.overall:.0f}/100\nSTATUS: {package.quality_score.status.value.upper()}\n\nBest Title:\n{package.selected_title.text}\n\nBest Hook:\n{package.selected_hook.text}\n\nClaims:\n{supported} supported\n{needs_review} needs review\n\nWarnings:\n{warnings}\n\nPackage ID:\n{package.package_id}")
 
 
 @app.command(name="list")

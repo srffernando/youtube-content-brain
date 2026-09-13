@@ -28,7 +28,7 @@ def test_cli_generate_list_show_validate_and_export(tmp_path: object) -> None:
     database = tmp_path / "brain.db"  # type: ignore[operator]
     export_path = tmp_path / "package.json"  # type: ignore[operator]
     runner = CliRunner()
-    generated = runner.invoke(app, ["generate", "--topic", TOPIC, "--format", "short", "--database", str(database)])
+    generated = runner.invoke(app, ["generate", "--topic", TOPIC, "--format", "short", "--database", str(database), "--json"])
     assert generated.exit_code == 0, generated.output
     package_id = json.loads(generated.output)["package_id"]
     assert runner.invoke(app, ["list", "--database", str(database)]).exit_code == 0
